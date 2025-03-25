@@ -1,0 +1,35 @@
+name: SQL Server Automation Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup-sqlserver:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SQL Server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mssql-tools
+
+      - name: Run SQL Script to Create Database, Table, and User
+        env:
+          SQL_SERVER_HOST: ${{ secrets.SQL_SERVER_HOST }}
+          SQL_SERVER_USER: ${{ secrets.SQL_SERVER_USER }}
+          SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+        run: |
+          sqlcmd -S $SQL_SERVER_HOST -U $SQL_SERVER_USER -P $SQL_SERVER_PASSWORD -i ./setup.sql
+     
+      - name: Insert Data Using Stored Procedure
+        env:
+          SQL_SERVER_HOST: ${{ secrets.SQL_SERVER_HOST }}
+          SQL_SERVER_USER: ${{ secrets.SQL_SERVER_USER }}
+          SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+        run: |
+          sqlcmd -S $SQL_SERVER_HOST -U $SQL_SERVER_USER -P $SQL_SERVER_PASSWORD -Q "EXEC InsertUser 'John', 'Doe', 'john.doe@example.com';"
