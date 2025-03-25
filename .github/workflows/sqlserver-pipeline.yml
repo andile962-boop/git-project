@@ -1,35 +1,64 @@
-name: SQL Server Automation Pipeline
+name: Automate AutoTest Database Creation
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  setup-sqlserver:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Checkout the repository code
+     
 
-      - name: Set up SQL Server
+      # Set up SQL Server in a container
+      - name: Start SQL Server Container
+        run: |
+          docker run -e "ACCEPT_EULA=Y" -e "SQL_SERVER_PASSWORD= StrongPassword123" \
+          -p 1433:1433 --name sql_server -d mcr.microsoft.com/mssql/server:2019-latest
+
+      # Wait for SQL Server to be ready
+      - name: Wait for SQL Server
+        run: |
+          sleep 10
+          for i in {1..30}; do
+            docker exec sql_server /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "StrongPassword123" -Q "SELECT 1" && break
+            sleep 2
+          done
+
+      # Install Pinggy to expose SQL Server
+      - name: Install Pinggy and Expose SQL Server
+        run: |
+          curl -sSL https://pinggy.io/downloads/install.sh | bash
+          ./pinggy -p 1433 > pinggy_output.txt 2>&1 &
+          sleep 5
+          PINGGY_URL=$(grep -oP 'tcp://[a-z0-9-]+\.a\.free\.pinggy\.link:[0-9]+' pinggy_output.txt)
+          echo "SQL Server exposed at: $PINGGY_URL"
+
+      # Install sqlcmd for executing SQL scripts
+      - name: Install sqlcmd
         run: |
           sudo apt-get update
-          sudo apt-get install -y mssql-tools
+          sudo apt-get install -y mssql-tools unixodbc-dev
+          echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
+          source ~/.bashrc
 
-      - name: Run SQL Script to Create Database, Table, and User
-        env:
-          SQL_SERVER_HOST: ${{ secrets.SQL_SERVER_HOST }}
-          SQL_SERVER_USER: ${{ secrets.SQL_SERVER_USER }}
-          SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+      # Execute SQL Setup Script
+      - name: Setup Database and User
         run: |
-          sqlcmd -S $SQL_SERVER_HOST -U $SQL_SERVER_USER -P $SQL_SERVER_PASSWORD -i ./setup.sql
-     
-      - name: Insert Data Using Stored Procedure
-        env:
-          SQL_SERVER_HOST: ${{ secrets.SQL_SERVER_HOST }}
-          SQL_SERVER_USER: ${{ secrets.SQL_SERVER_USER }}
-          SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+          /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "StrongPassword123" -i setup.sql
+
+      # Execute Stored Procedure Script
+      - name: Create and Run Stored Procedure
         run: |
-          sqlcmd -S $SQL_SERVER_HOST -U $SQL_SERVER_USER -P $SQL_SERVER_PASSWORD -Q "EXEC InsertUser 'John', 'Doe', 'john.doe@example.com';"
+          /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "StrongPassword123" -i stored_procedure.sql
+
+      # Keep the job running briefly to test the exposed server (optional)
+      - name: Test Connection (Optional)
+        run: |
+          PINGGY_URL=$(grep -oP 'tcp://[a-z0-9-]+\.a\.free\.pinggy\.link:[0-9]+' pinggy_output.txt)
+          echo "You can connect to SQL Server at: $PINGGY_URL"
+          sleep 30  # Keep it alive for 30 seconds to allow manual testing if needed
