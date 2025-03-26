@@ -50,14 +50,14 @@ jobs:
           # Check if sqlcmd is installed, if not install it
           if ! command -v sqlcmd > /dev/null; then
             echo "Installing sqlcmd..."
-            # Add Microsoft repository
+            # Add Microsoft repository for Ubuntu 24.04
             curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-            sudo apt-add-repository "https://packages.microsoft.com/ubuntu/20.04/prod"
+            sudo apt-add-repository "https://packages.microsoft.com/ubuntu/24.04/prod"
             sudo apt-get update
             # Install mssql-tools and unixodbc-dev
-            sudo ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev
+            sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
             # Add mssql-tools to PATH
-            echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
+            echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
             source ~/.bashrc
           fi
 
@@ -65,11 +65,11 @@ jobs:
         env:
           SQL_SERVER_USER: ${{ secrets.SQL_SERVER_USER }}
         run: |
-          /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${{ secrets.SQL_SERVER_PASSWORD }}" -i setup.sql
+          /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${{ secrets.SQL_SERVER_PASSWORD }}" -i setup.sql
 
       - name: Create and Run Stored Procedure
         run: |
-          /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${{ secrets.SQL_SERVER_PASSWORD }}" -i stored_procedure.sql
+          /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${{ secrets.SQL_SERVER_PASSWORD }}" -i stored_procedure.sql
 
       - name: Test Connection (Optional)
         run: |
