@@ -36,4 +36,4 @@ jobs:
       # Execute the combined SQL script using the admin user
       - name: Setup Database, User, Table, Procedure, and Data
         run: |
-          sqlcmd -S "${{ secrets.SQL_SERVER_HOST }}" -U Auto_user -P ${{ secrets.SQL_SERVER_PASSWORD }} -i .github/stored_procedure.sql
+          sqlcmd -S "${{ secrets.SQL_SERVER_HOST }}" -U Auto_user -P ${{ secrets.SQL_SERVER_PASSWORD }} -i /setup.sql
