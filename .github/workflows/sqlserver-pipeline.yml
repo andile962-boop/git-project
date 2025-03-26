@@ -1,21 +1,21 @@
 name: Setup SQL Server Database
- 
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
- 
+
 jobs:
   setup-database:
     runs-on: ubuntu-latest  # Use GitHub-hosted runner
- 
+
     steps:
       # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
- 
+
       # Add Microsoft repository for SQL Server tools
       - name: Add Microsoft repository for SQL Server tools
         run: |
@@ -24,15 +24,16 @@ jobs:
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
           curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
           sudo apt-get update
- 
+
       # Install SQL Server client (sqlcmd)
       - name: Install SQL Server client
         run: sudo apt-get install -y mssql-tools unixodbc-dev
- 
+
       # Add SQL Server tools to PATH
       - name: Add SQL Server tools to PATH
         run: echo "/opt/mssql-tools/bin" >> $GITHUB_PATH
-      # Execute the combined SQL script (SetupAll.sql) using the admin user
+
+      # Execute the combined SQL script using the admin user
       - name: Setup Database, User, Table, Procedure, and Data
         run: |
-          sqlcmd -S "${{ secrets.SQL_SERVER_HOST }}" -U Auto_user -P ${{ secrets.SQL_SERVER_PASSWORD }} -i /.stored_procedure.sql
+          sqlcmd -S "${{ secrets.SQL_SERVER_HOST }}" -U Auto_user -P ${{ secrets.SQL_SERVER_PASSWORD }} -i .github/stored_procedure.sql
