@@ -53,7 +53,7 @@ jobs:
             msiexec /i msodbcsql.msi /quiet /qn /norestart IACCEPTMSODBCSSQLLICENSETERMS=YES
             set "PATH=%PATH%;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn"
           )
-        shell: cmd
+        
 
       - name: Setup Database and User
         env:
