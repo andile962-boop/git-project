@@ -2,7 +2,7 @@ USE master;
 GO
 
 -- Create database if not exists
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'AutoTest')
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'AutoDBAndile')
 BEGIN
     CREATE DATABASE AutoDBAndile;
     PRINT 'Database AutoDBAndile created successfully.';
