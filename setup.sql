@@ -2,18 +2,18 @@ USE master;
 GO
 
 -- Create database if not exists
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'AutoDBAndile')
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'AutoDB_AN_Mar27')
 BEGIN
-    CREATE DATABASE AutoDBAndile;
-    PRINT 'Database AutoDBAndile created successfully.';
+    CREATE DATABASE AutoDB_AN_Mar27;
+    PRINT 'Database AutoDB_AN_Mar27 created successfully.';
 END
 ELSE
 BEGIN
-    PRINT 'Database AutoDBAndile already exists.';
+    PRINT 'AutoDB_AN_Mar27 already exists.';
 END
 GO
 
-USE AutoDBAndile;
+USEAutoDB_AN_Mar27;
 GO
 
 -- Create stored procedure for complete setup
