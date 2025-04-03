@@ -1,33 +1,42 @@
-name: SQL DevProd TempDeployment
+name: SQL Server Deploy Template
+description: Sets up SQL Server tools and deploys database on Ubuntu
 
-on:
-  workflow_dispatch:
-    inputs:
-      sql_script:
-        description: 'Path to the SQL script'
-        required: true
-        type: string
+inputs:
+  sql_server_host:
+    description: 'SQL Server host address'
+    required: true
+  sql_server_password:
+    description: 'SQL Server password'
+    required: true
+  sql_file:
+    description: 'Path to SQL setup file'
+    required: true
+    default: 'setup.sql'
 
-jobs:
-  DeveloperEnv:
-    uses: ./.github/workflows/sql-deploy-template.yml
-    with:
-      sql_script: ${{ github.event.inputs.sql_script }}
-      environment_name: development
-    secrets:
-      SQL_SERVER_URL: ${{ secrets.SQL_SERVER_HOST }}
-      SQL_USERNAME: ${{ secrets.SQL_SERVER_USER }}
-      SQL_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
+    - name: Add Microsoft repository for SQL Server tools
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+        sudo apt-get update
 
-  ProductionEnv:
-    needs: deploy-dev
-    uses: ./.github/workflows/setup-sql-main.yml
-    with:
-      sql_script: ${{ github.event.inputs.sql_script }}
-      environment_name: production
-    secrets:
-      SQL_SERVER_URL: ${{ secrets.PROD_SQL_SERVER_URL }}
-      SQL_USERNAME: ${{ secrets.PROD_SQL_USER }}
-      SQL_PASSWORD: ${{ secrets.PROD_SQL_PASSWORD }}
-      
+    - name: Install SQL Server client
+      shell: bash
+      run: sudo apt-get install -y mssql-tools unixodbc-dev
+
+    - name: Add SQL Server tools to PATH
+      shell: bash
+      run: echo "/opt/mssql-tools/bin" >> $GITHUB_PATH
+
+    - name: Setup Database
+      shell: bash
+      run: |
+        sqlcmd -S "${{ inputs.sql_server_host }}" -U Auto_user -P "${{ inputs.sql_server_password }}" -i "${{ inputs.sql_file }}"
