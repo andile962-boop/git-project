@@ -1,29 +1,25 @@
-name: Setup SQL Main
+name: Setup SQL Server Database
 
 on:
   workflow_dispatch:
 
 jobs:
   deploy-dev:
-    runs-on: ubuntu-latest
-    environment: development
-    steps:
-      - name: Setup and Deploy Development Database
-        uses: ./.github/workflows/dev-prod-template.yml
-        with:
-          sql_server_host: ${{ secrets.SQL_SERVER_HOST }}
-          sql_server_password: ${{ secrets.SQL_SERVER_PASSWORD }}
-          sql_file: 'setup.sql'
+    uses: ./.github/workflows/dev-prod-template.yml
+    with:
+      sql_script: "setup.sql"
+      environment_name: "development"
+    secrets:
+      SQL_SERVER_HOST: ${{ secrets.SQL_SERVER_HOST }}
+      SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
 
   deploy-prod:
-    runs-on: ubuntu-latest
     needs: deploy-dev
-    environment: production
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Setup and Deploy Production Database
-        uses: ./.github/workflows/dev-prod-template.yml
-        with:
-          sql_server_host: ${{ secrets.PROD_SQL_SERVER_HOST }}
-          sql_server_password: ${{ secrets.PROD_SQL_SERVER_PASSWORD }}
-          sql_file: 'setup.sql'
+    uses: ./.github/workflows/dev-prod-template.yml
+    with:
+      sql_script: "setup.sql"
+      environment_name: "production"
+    secrets:
+      SQL_SERVER_HOST: ${{ secrets.PROD_SQL_SERVER_HOST }}
+      SQL_SERVER_PASSWORD: ${{ secrets.PROD_SQL_SERVER_PASSWORD }}
