@@ -22,7 +22,7 @@ jobs:
 
   ProductionEnv:
     needs: deploy-dev
-    uses: ./.github/workflows/setup-sql-template.yml
+    uses: ./.github/workflows/setup-sql-main.yml
     with:
       sql_script: ${{ github.event.inputs.sql_script }}
       environment_name: production
