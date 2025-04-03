@@ -1,10 +1,6 @@
 name: Setup SQL Server Database
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -13,7 +9,7 @@ jobs:
     environment: development
     steps:
       - name: Setup and Deploy Development Database
-        uses: ./.github/workflows/sql-server-setup.yml
+        uses: ./.github/workflows/dev-prod-template.yml
         with:
           sql_server_host: ${{ secrets.SQL_SERVER_HOST }}
           sql_server_password: ${{ secrets.SQL_SERVER_PASSWORD }}
@@ -26,7 +22,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Setup and Deploy Production Database
-        uses: ./.github/workflows/sql-server-setup.yml
+        uses: ./.github/workflows/dev-prod-template.yml
         with:
           sql_server_host: ${{ secrets.PROD_SQL_SERVER_HOST }}
           sql_server_password: ${{ secrets.PROD_SQL_SERVER_PASSWORD }}
