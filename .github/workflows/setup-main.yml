@@ -1,4 +1,4 @@
-name: Setup SQL Server Database
+name: Setup SQL Server Main
 
 on:
   workflow_dispatch:
