@@ -1,42 +1,43 @@
-name: SQL Server Deploy Template
-description: Sets up SQL Server tools and deploys database on Ubuntu
+name: SQL Deployment Template
 
-inputs:
-  sql_server_host:
-    description: 'SQL Server host address'
-    required: true
-  sql_server_password:
-    description: 'SQL Server password'
-    required: true
-  sql_file:
-    description: 'Path to SQL setup file'
-    required: true
-    default: 'setup.sql'
+on:
+  workflow_call:
+    inputs:
+      sql_script:
+        required: true
+        type: string
+      environment_name:
+        description: 'Target environment (dev/prod)'
+        required: true
+        type: string
+    secrets:
+      SQL_SERVER_HOST:
+        required: true
+      SQL_SERVER_PASSWORD:
+        required: true
 
-runs:
-  using: composite
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+jobs:
+  DeploySQL:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3  # Matches original version
 
-    - name: Add Microsoft repository for SQL Server tools
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y curl
-        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-        curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
-        sudo apt-get update
+      - name: Add Microsoft repository for SQL Server tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+          sudo apt-get update
 
-    - name: Install SQL Server client
-      shell: bash
-      run: sudo apt-get install -y mssql-tools unixodbc-dev
+      - name: Install SQL Server client
+        run: sudo apt-get install -y mssql-tools unixodbc-dev
 
-    - name: Add SQL Server tools to PATH
-      shell: bash
-      run: echo "/opt/mssql-tools/bin" >> $GITHUB_PATH
+      - name: Add SQL Server tools to PATH
+        run: echo "/opt/mssql-tools/bin" >> $GITHUB_PATH
 
-    - name: Setup Database
-      shell: bash
-      run: |
-        sqlcmd -S "${{ inputs.sql_server_host }}" -U Auto_user -P "${{ inputs.sql_server_password }}" -i "${{ inputs.sql_file }}"
+      - name: Setup Database
+        run: |
+          sqlcmd -S "${{ secrets.SQL_SERVER_HOST }}" -U Auto_user -P "${{ secrets.SQL_SERVER_PASSWORD }}" -i "${{ inputs.sql_script }}"
