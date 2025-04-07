@@ -12,6 +12,7 @@ jobs:
     secrets:
       SQL_SERVER_HOST: ${{ secrets.SQL_SERVER_HOST }}
       SQL_SERVER_PASSWORD: ${{ secrets.SQL_SERVER_PASSWORD }}
+      TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
   deploy-prod:
     needs: deploy-dev
@@ -23,3 +24,4 @@ jobs:
     secrets:
       SQL_SERVER_HOST: ${{ secrets.PROD_SQL_SERVER_HOST }}
       SQL_SERVER_PASSWORD: ${{ secrets.PROD_SQL_SERVER_PASSWORD }}
+      TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
