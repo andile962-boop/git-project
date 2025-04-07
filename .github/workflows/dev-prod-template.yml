@@ -15,6 +15,8 @@ on:
         required: true
       SQL_SERVER_PASSWORD:
         required: true
+      TEAMS_WEBHOOK_URL:
+        required: true
 
 jobs:
   DeploySQL:
@@ -37,6 +39,16 @@ jobs:
 
       - name: Add SQL Server tools to PATH
         run: echo "/opt/mssql-tools/bin" >> $GITHUB_PATH
+
+  notify-teams:
+    needs: DeploySQL
+    uses: ./.github/workflows/teams-notification.yml
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      sql_script: ${{ inputs.sql_script }}
+      status: ${{ needs.deploy-sql.outputs.status }}
+    secrets:
+      webhookUrl: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
       - name: Setup Database
         run: |
